@@ -1,4 +1,4 @@
-#include "GPz++.hpp"
+#include "gpz++.hpp"
 
 template<typename T>
 void write_vec1d(std::ofstream& fout, const T& vec) {

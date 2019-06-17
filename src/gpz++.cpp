@@ -1,4 +1,4 @@
-#include "GPz++.hpp"
+#include "gpz++.hpp"
 #include <vif/core/main.hpp>
 
 #ifndef GPZPP_GIT_HASH

@@ -1,4 +1,4 @@
-#include "GPz++.hpp"
+#include "gpz++.hpp"
 
 std::string remove_first_last(std::string val, std::string charlist) {
     if (val.empty()) return val;
