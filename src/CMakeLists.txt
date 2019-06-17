@@ -44,6 +44,6 @@ add_executable(gpz++
   gpz++-read_input.cpp
   gpz++-write_output.cpp)
 
-target_link_libraries(gpz++ ${VIF_LIBRARIES})
 target_link_libraries(gpz++ ${GPZ_LIBRARIES})
+target_link_libraries(gpz++ ${VIF_LIBRARIES})
 install(TARGETS gpz++ DESTINATION bin)
