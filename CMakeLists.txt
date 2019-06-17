@@ -61,7 +61,7 @@ ExternalProject_Add(vif
         -DCMAKE_BUILD_TYPE=Release)
 
 # Configure and build GPz++
-ExternalProject_Add(GPz++
+ExternalProject_Add(gpz++
     DEPENDS vif PHZ_GPz
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/src
     LIST_SEPARATOR "|"
@@ -75,5 +75,5 @@ ExternalProject_Add(GPz++
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
 install(PROGRAMS
-    ${CMAKE_BINARY_DIR}/bin/GPz++
+    ${CMAKE_BINARY_DIR}/bin/gpz++
     DESTINATION bin COMPONENT runtime)

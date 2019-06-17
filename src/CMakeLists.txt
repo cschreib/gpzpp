@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(GPz++ C CXX)
+project(gpz++ C CXX)
 
 if (NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type selected, default to Release (-DCMAKE_BUILD_TYPE=...)")
@@ -38,12 +38,12 @@ include_directories(${VIF_INCLUDE_DIRS})
 message(STATUS ${GPZ_INCLUDE_DIRS})
 include_directories(${GPZ_INCLUDE_DIRS})
 
-# Build GPz++
-add_executable(GPz++
-  GPz++.cpp
-  GPz++-read_input.cpp
-  GPz++-write_output.cpp)
+# Build gpz++
+add_executable(gpz++
+  gpz++.cpp
+  gpz++-read_input.cpp
+  gpz++-write_output.cpp)
 
-target_link_libraries(GPz++ ${VIF_LIBRARIES})
-target_link_libraries(GPz++ ${GPZ_LIBRARIES})
-install(TARGETS GPz++ DESTINATION bin)
+target_link_libraries(gpz++ ${VIF_LIBRARIES})
+target_link_libraries(gpz++ ${GPZ_LIBRARIES})
+install(TARGETS gpz++ DESTINATION bin)
