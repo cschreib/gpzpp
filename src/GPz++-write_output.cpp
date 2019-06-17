@@ -76,8 +76,8 @@ void write_output(const options_t& opts, const PHZ_GPz::GPz& gpz,
     } else {
         fout << "# GPz version: " << gpzpp_version << "-" << gpzpp_git_hash << std::endl;
     }
-    fout << "# Training catalog file: " << opts.training_catalog << std::endl;
-    fout << "# Testing catalog file:  " << opts.testing_catalog << std::endl;
+    fout << "# Training catalog file:   " << opts.training_catalog << std::endl;
+    fout << "# Prediction catalog file: " << opts.prediction_catalog << std::endl;
     fout << "# Number of features:         " << gpz.getNumberOfFeatures() << std::endl;
     fout << "# Number of basis functions:  " << gpz.getNumberOfBasisFunctions() << std::endl;
     switch (gpz.getPriorMeanFunction()) {

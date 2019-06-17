@@ -70,13 +70,13 @@ int vif_main(int argc, char* argv[]) {
         }
     }
 
-    if (!opts.testing_catalog.empty()) {
+    if (!opts.prediction_catalog.empty()) {
         // Predict
 
         // Read data
         PHZ_GPz::Vec2d input, input_error;
         vec1s id;
-        if (!read_testing(opts, id, input, input_error)) {
+        if (!read_prediction(opts, id, input, input_error)) {
             return 1;
         }
 

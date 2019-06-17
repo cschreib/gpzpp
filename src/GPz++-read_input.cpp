@@ -42,6 +42,67 @@ bool parse_value_impl(const std::string& val, PHZ_GPz::CovarianceType& out) {
     return true;
 }
 
+bool parse_value_impl(const std::string& val, PHZ_GPz::PriorMeanFunction& out) {
+    if (val == "none") {
+        out = PHZ_GPz::PriorMeanFunction::ZERO;
+    } else if (val == "constant") {
+        out = PHZ_GPz::PriorMeanFunction::CONSTANT_PREPROCESS;
+    } else if (val == "linear") {
+        out = PHZ_GPz::PriorMeanFunction::LINEAR_PREPROCESS;
+    } else if (val == "linear_marg") {
+        out = PHZ_GPz::PriorMeanFunction::LINEAR_MARGINALIZE;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool parse_value_impl(const std::string& val, PHZ_GPz::WeightingScheme& out) {
+    if (val == "uniform") {
+        out = PHZ_GPz::WeightingScheme::UNIFORM;
+    } else if (val == "1/(1+z)") {
+        out = PHZ_GPz::WeightingScheme::ONE_OVER_ONE_PLUS_OUTPUT;
+    } else if (val == "balanced") {
+        out = PHZ_GPz::WeightingScheme::BALANCED;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool parse_value_impl(const std::string& val, PHZ_GPz::NormalizationScheme& out) {
+    if (val == "natural") {
+        out = PHZ_GPz::NormalizationScheme::NATURAL;
+    } else if (val == "whiten") {
+        out = PHZ_GPz::NormalizationScheme::WHITEN;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool parse_value_impl(const std::string& val, PHZ_GPz::TrainValidationSplitMethod& out) {
+    if (val == "random") {
+        out = PHZ_GPz::TrainValidationSplitMethod::RANDOM;
+    } else if (val == "sequential") {
+        out = PHZ_GPz::TrainValidationSplitMethod::SEQUENTIAL;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool parse_value_impl(const std::string& val, PHZ_GPz::OutputUncertaintyType& out) {
+    if (val == "uniform") {
+        out = PHZ_GPz::OutputUncertaintyType::UNIFORM;
+    } else if (val == "input_dependent") {
+        out = PHZ_GPz::OutputUncertaintyType::INPUT_DEPENDENT;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 template <typename T>
 bool parse_value_impl(std::string val, vec<1,T>& out) {
     if (val.empty()) return true;
@@ -83,19 +144,21 @@ bool read_config(const std::string& filename, options_t& opts, PHZ_GPz::GPz& gpz
 
     vec1s unparsed_key, unparsed_val;
 
+    PHZ_GPz::GPzOptimizations optim;
+
     auto do_parse = [&](const std::string& key, const std::string& val) {
         #define PARSE_OPTION(name) if (key == #name) { return parse_value(key, val, opts.name); }
-        #define PARSE_OPTION_GPZ(name, type, func) if (key == #name) { type tmp; if (parse_value(key, val, tmp)) { gpz.func(tmp); return true; } else { return false; } }
         #define PARSE_OPTION_RENAME(opt, name) if (key == name) { return parse_value(key, val, opts.opt); }
+        #define PARSE_OPTION_GPZ(name, type, func) if (key == #name) { type tmp; if (parse_value(key, val, tmp)) { gpz.func(tmp); return true; } else { return false; } }
+        #define PARSE_OPTION_GPZ_OPTIM(name, field) if (key == #name) { return parse_value(key, val, optim.field); }
 
         PARSE_OPTION(training_catalog)
-        PARSE_OPTION(testing_catalog)
+        PARSE_OPTION(prediction_catalog)
         PARSE_OPTION(output_catalog)
         PARSE_OPTION(model_file)
         PARSE_OPTION(save_model)
         PARSE_OPTION(reuse_model)
         PARSE_OPTION(use_model_as_hint)
-        PARSE_OPTION(catalog_format)
         PARSE_OPTION(output_column)
         PARSE_OPTION(weight_column)
         PARSE_OPTION(flux_column_prefix)
@@ -106,13 +169,32 @@ bool read_config(const std::string& filename, options_t& opts, PHZ_GPz::GPz& gpz
         PARSE_OPTION(transform_inputs)
         PARSE_OPTION_RENAME(bands_regex, "bands")
 
-        PARSE_OPTION_GPZ(verbose,    bool,                    setVerboseMode)
-        PARSE_OPTION_GPZ(covariance, PHZ_GPz::CovarianceType, setCovarianceType)
-        PARSE_OPTION_GPZ(num_bf,     uint_t,                  setNumberOfBasisFunctions)
+        PARSE_OPTION_GPZ(verbose,                       bool,                                setVerboseMode)
+        PARSE_OPTION_GPZ(num_bf,                        uint_t,                              setNumberOfBasisFunctions)
+        PARSE_OPTION_GPZ(covariance,                    PHZ_GPz::CovarianceType,             setCovarianceType)
+        PARSE_OPTION_GPZ(prior_mean,                    PHZ_GPz::PriorMeanFunction,          setPriorMeanFunction)
+        PARSE_OPTION_GPZ(weighting_scheme,              PHZ_GPz::WeightingScheme,            setWeightingScheme)
+        PARSE_OPTION_GPZ(normalization_scheme,          PHZ_GPz::NormalizationScheme,        setNormalizationScheme)
+        PARSE_OPTION_GPZ(valid_sample_method,           PHZ_GPz::TrainValidationSplitMethod, setTrainValidationSplitMethod)
+        PARSE_OPTION_GPZ(output_error_type,             PHZ_GPz::OutputUncertaintyType,      setOutputUncertaintyType)
+        PARSE_OPTION_GPZ(balanced_weighting_bin,        double,                              setBalancedWeightingBinSize)
+        PARSE_OPTION_GPZ(balanced_weighting_max_weight, double,                              setBalancedWeightingMaxWeight)
+        PARSE_OPTION_GPZ(train_valid_ratio,             double,                              setTrainValidationRatio)
+        PARSE_OPTION_GPZ(valid_sample_seed,             uint_t,                              setTrainValidationSplitSeed)
+        PARSE_OPTION_GPZ(bf_position_seed,              uint_t,                              setInitialPositionSeed)
+        PARSE_OPTION_GPZ(fuzzing,                       bool,                                setFuzzInitialValues)
+        PARSE_OPTION_GPZ(fuzzing_seed,                  uint_t,                              setFuzzingSeed)
+        PARSE_OPTION_GPZ(max_iter,                      uint_t,                              setOptimizationMaxIterations)
+        PARSE_OPTION_GPZ(tolerance,                     double,                              setOptimizationTolerance)
+        PARSE_OPTION_GPZ(grad_tolerance,                double,                              setOptimizationGradientTolerance)
+        PARSE_OPTION_GPZ(predict_error,                 bool,                                setPredictVariance)
+
+        PARSE_OPTION_GPZ_OPTIM(n_thread, maxThreads)
 
         #undef  PARSE_OPTION
-        #undef  PARSE_OPTION_GPZ
         #undef  PARSE_OPTION_RENAME
+        #undef  PARSE_OPTION_GPZ
+        #undef  PARSE_OPTION_GPZ_OPTIM
 
         unparsed_key.push_back(key);
         unparsed_val.push_back(val);
@@ -153,6 +235,77 @@ bool read_config(const std::string& filename, options_t& opts, PHZ_GPz::GPz& gpz
     for (uint_t p : range(unparsed_key)) {
         warning("unknown parameter '", to_upper(unparsed_key[p]), "'");
     }
+
+    // Check and adjust options
+
+    if (optim.maxThreads > 1) {
+        optim.enableMultithreading = true;
+    }
+
+    if (opts.output_catalog.empty()) {
+        opts.output_catalog = "gpz.cat";
+    }
+
+    if (opts.model_file.empty()) {
+        opts.model_file = "gpz_model.dat";
+    }
+
+    if (optim.maxThreads > 100) {
+        error("asking for more than 100 threads (", optim.maxThreads, ") is asking for trouble!");
+        error("please double check the value of N_THREAD=...");
+        return false;
+    }
+
+    if (opts.training_catalog.empty() && !(opts.reuse_model && file::exists(opts.model_file))) {
+        error("GPz++ needs either a training catalog or a trained model before it can do predictions");
+        error("please specify either TRAINING_CATALOG=...");
+        error("... or set REUSE_MODEL=1 and provide a valid MODEL_FILE=...");
+        return false;
+    }
+
+    if (opts.training_catalog.empty() && opts.prediction_catalog.empty()) {
+        error("no training or prediction catalog provided, nothing to do");
+        error("please specify either TRAINING_CATALOG=... or PREDICTION_CATALOG=...");
+        return false;
+    }
+
+    if (opts.flux_column_prefix.empty() && opts.error_column_prefix.empty() && opts.use_errors) {
+        error("impossible to identify error columns if FLUX_COLUMN_PREFIX = ERROR_COLUMN_PREFIX"
+            " or if both are empty.");
+        error("Please specify values for these parameters or set USE_ERRORS=0");
+        return false;
+    }
+    if (opts.output_catalog == opts.training_catalog) {
+        error("the chosen output catalog file name (", opts.output_catalog, ") would overwrite the "
+            "training catalog");
+        return false;
+    }
+
+    if (opts.output_catalog == opts.prediction_catalog) {
+        error("the chosen output catalog file name (", opts.output_catalog, ") would overwrite the "
+            "prediction input catalog");
+        return false;
+    }
+
+    if (opts.output_catalog == opts.model_file && opts.save_model) {
+        error("the chosen output catalog file name (", opts.output_catalog, ") would overwrite the "
+            "output model");
+        return false;
+    }
+
+    if (opts.reuse_model && opts.use_model_as_hint) {
+        error("cannot set both REUSE_MODEL=1 and USE_MODEL_AS_HINT=1");
+        return false;
+    }
+
+    vec1s allowed_transforms = {"none", "no", "", "flux_to_luptitude"};
+    if (!is_any_of(opts.transform_inputs, allowed_transforms)) {
+        error("unknown flux transformation '", opts.transform_inputs, "'");
+        return false;
+    }
+
+    // Set optimization parameters
+    gpz.setOptimizationFlags(optim);
 
     return true;
 }
@@ -483,7 +636,7 @@ bool read_ascii(options_t& opts, const std::string& filename, vec1s& id, PHZ_GPz
                 c2 = "training catalog";
             } else {
                 c1 = "training catalog";
-                c2 = "testing catalog";
+                c2 = "prediction catalog";
             }
 
             error("mismatch of bands between ", c1, ":");
@@ -649,11 +802,11 @@ bool read_training(options_t& opts,
     return true;
 }
 
-bool read_testing(options_t& opts,
+bool read_prediction(options_t& opts,
     vec1s& id, PHZ_GPz::Vec2d& input, PHZ_GPz::Vec2d& inputError) {
 
     PHZ_GPz::Vec1d output, weight;
-    if (!read_ascii(opts, opts.testing_catalog, id, input, inputError, output, weight, "testing")) {
+    if (!read_ascii(opts, opts.prediction_catalog, id, input, inputError, output, weight, "prediction")) {
         return false;
     }
 

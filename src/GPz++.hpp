@@ -22,7 +22,7 @@ extern const char* gpzpp_git_hash;
 
 struct options_t {
     std::string training_catalog;
-    std::string testing_catalog;
+    std::string prediction_catalog;
     std::string output_catalog = "gpz.cat";
     std::string model_file = "gpz_model.dat";
 
@@ -30,15 +30,14 @@ struct options_t {
     bool reuse_model = true;
     bool use_model_as_hint = false;
 
-    std::string catalog_format = "ascii";
     std::string output_column = "z_spec";
     std::string weight_column = "";
     std::string flux_column_prefix = "F";
     std::string error_column_prefix = "E";
-    bool use_errors = true;
-    vec1s bands_regex;
-    double output_min = -finf;
-    double output_max = +finf;
+    bool        use_errors = true;
+    vec1s       bands_regex;
+    double      output_min = -finf;
+    double      output_max = +finf;
     std::string transform_inputs = "";
 
     vec1s bands;
@@ -53,7 +52,7 @@ bool read_training(options_t& opts,
     PHZ_GPz::Vec2d& input, PHZ_GPz::Vec2d& inputError,
     PHZ_GPz::Vec1d& output, PHZ_GPz::Vec1d& weight);
 
-bool read_testing(options_t& opts,
+bool read_prediction(options_t& opts,
     vec1s& id, PHZ_GPz::Vec2d& input, PHZ_GPz::Vec2d& inputError);
 
 // Write outputs
