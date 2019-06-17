@@ -23,8 +23,6 @@ ExternalProject_Add(Eigen3
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror
     GIT_TAG 3.3.7
     CMAKE_ARGS
-        -DBYPASS_ELEMENTS=ON
-        -DGPZ_NO_GSL=ON
         -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/external
         -DCMAKE_BUILD_TYPE=Release)
 
