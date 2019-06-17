@@ -32,7 +32,7 @@ ExternalProject_Add(PHZ_GPz
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/PHZ_GPz
     DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/external/PHZ_GPz
     GIT_REPOSITORY https://github.com/cschreib/PHZ_GPz.git
-    GIT_TAG develop
+    GIT_TAG v1.0.0
     CMAKE_ARGS
         -DBYPASS_ELEMENTS=ON
         -DGPZ_NO_GSL=ON
