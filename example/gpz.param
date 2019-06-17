@@ -1,0 +1,294 @@
+#... GPz++ v1.0: parameter file ........................................
+
+
+#--- GENERAL INFORMATION -----------------------------------------------
+#
+# Please read this parameter file in detail, you can find all relevant
+# information here. Note that you may have to adjust your input
+# catalogs to conform with the expected input format, otherwise GPz++
+# may not work properly!
+#
+# o Requirements:
+#   - about 400 MB of free RAM memory when training
+#   - about 40 MB of free RAM memory when predicting
+#   - at least one CPU core
+#
+# o The current directory should contain the following files:
+#   - This parameter file
+#   - A training catalog with photometry and spectroscopic redshifts
+#   - A prediction catalog with photometry
+#
+# o GPz++ runs from the command line.
+#   The first argument is the parameter file. Default is 'gpz.param'
+#   $ gpz++
+#   $ gpz++ my_gpz.param
+#
+# o VERBOSE: set to 0 to disable output in the terminal (except for
+#   warnings and errors, which are always shown)
+#
+# o N_THREAD: sets the maximum number of threads the program can use at
+#   once. This should be close to (or equal to) the number of available
+#   cores on your CPU, or one less than the number of nodes available on a
+#   cluster. Setting this to zero or one will disable parallelization.
+#
+#-----------------------------------------------------------------------
+
+VERBOSE         = 1             # 0 / 1
+N_THREAD        = 4             # 0, 1, 2, ...
+
+
+#--- INPUT CATALOG INFORMATION -----------------------------------------
+#
+# o TRAINING_CATALOG: path to the file containing the training data.
+#   - By default GPz++ recognizes columns with names
+#     {id,z_spec,F[x],E[x]}, where x is the name (or ID) of a filter or
+#     broadband. The column names must be specified in the catalog
+#     header (first line starting with '#'). The order of the columns is
+#     not relevant. If your columns have names different from the
+#     defaults, you can tell GPz++ which names to use (see below).
+#   - Missing bands (data not observed) can be flagged with the special
+#     value 'nan' (not-a-number), or by specifying a negative
+#     uncertainty. Missing z_specs must also be set to 'nan' and will be
+#     ignored during the training.
+#   - The 'id' column is optional and not used for training.
+#
+# o PREDICTION_CATALOG: path to the file containing the data used to
+#   predictions. The format is the same as for the training catalog.
+#   For this catalog, the 'z_spec' column (if present) is ignored, but
+#   the 'id' column (if present) will be copied in the output catalog.
+#   If this is left empty, GPz++ will only do the training and save the
+#   trained model on the disk for later use.
+#
+# o BANDS: Perl regular expression used to identify flux columns in the
+#   input catalogs. See http://jkorpela.fi/perl/regexp.html for a brief
+#   overview on how the regular expressions work. A few examples:
+#    - [ugriz]
+#      This will select any column containing the characters u, g, r,
+#      i, or z. For example it will match "mag_u", but also "count",
+#      and will probably lead to a lot of unwanted matches.
+#    - ^mag_[ugriz]$
+#      Same as above, but only if the column name starts with "mag_",
+#      is followed by u, g, r, i, or z, and nothing else after that.
+#      This is better, and specifies more stricly the acceptable names.
+#    - F[0-9]+
+#      This will select any column containing "F" followed by a
+#      number with at least one digit. Will match "F100" but also
+#      "REFF2".
+#   Note that, independently of what is specified in BANDS, the flux
+#   column must start with the string specified in FLUX_COLUMN_PREFIX.
+#   The name of a band will be determined by taking the name of its
+#   associated flux column, and removing the prefix specified in
+#   FLUX_COLUMN_PREFIX. If you are using flux uncertainties, their
+#   corresponding column must then start with the string specified in
+#   ERROR_COLUMN_PREFIX, followed by the name of the band.
+#
+# o FLUX_COLUMN_PREFIX: string that must be present at the beginning of
+#   the name of every flux column in the input catalog. See BANDS above
+#   for more information.
+#
+# o ERROR_COLUMN_PREFIX: string that must be present at the beginning of
+#   the name of every flux uncertainty column in the input catalog. See
+#   BANDS above for more information. Can be left blank if you are not
+#   using flux uncertainties (see USE_ERRORS below).
+#
+# o OUTPUT_COLUMN: name of the column in the training catalog that will
+#   be used as training output (the value that you want the model to
+#   be able to predict). The default is "z_spec".
+#
+# o WEIGHT_COLUMN: name of the column in the training catalog that will
+#   be used as weights for the training data. Weights determine which
+#   elements of the training set are more important than others. Leave
+#   this empty if you do not want to use weights. See also
+#   WEIGHTING_SCHEME below if you want to use automatic weighting.
+#
+# o WEIGHTING_SCHEME: automatic weighting of the training set. Note that
+#   no automatic weighting will be done if the training catalog contains
+#   a weight column (see above).
+#    - uniform: no weighting
+#    - 1/(1+z): as its name implies, using z=z_spec
+#    - balanced: ensure equal weight in output space (low-z vs high-z)
+#
+# o BALANCED_WEIGHTING_BIN: if WEIGHTING_SCHEME=balanced, this controls
+#   the width of the bins of the output space in which the summed
+#   weights are equalized. Increase the value if your training set is
+#   too small, to avoid having bins with very few objects that will
+#   get very strongly up-weighted.
+#
+# o BALANCED_WEIGHTING_MAX_WEIGHT: if WEIGHTING_SCHEME=balanced, this
+#   controls the maximum relative weight between two elements of the
+#   training set.
+#
+# o OUTPUT_MIN, OUTPUT_MAX: select the range of acceptable values for
+#   the output variable (i.e., z_spec). Any element of the training set
+#   with values outside of this range will be discarded. This can be use
+#   for example to remove negative z_specs, which in many catalogs
+#   indicate a missing z_spec. Note that this does not directly impact
+#   the predicted values: even if OUTPUT_MIN = 0, it is possible that
+#   GPz++ will predict a negative z_phot.
+#
+# o USE_ERRORS: when enabled (default), GPz++ will use the reported
+#   errors on fluxes for both the training and the prediction. Otherwise
+#   it will assume that the fluxes are not noisy, which will probably
+#   lead to worse predictions.
+#
+# o TRANSFORM_INPUTS: this specifies if a transformation must be applied
+#   to the fluxes (or inputs) before training and prediction. GPz++ does
+#   not deal well with inputs that have a large dynamic range, such as
+#   fluxes. Magnitudes are better for this, however they are not capable
+#   of representing negative fluxes, which sometime happen for low S/N
+#   detections. Luptitudes are a good compromise between the two.
+#    - 'no' (or 'none'): no modification to inputs
+#    - 'flux_to_luptitude': transform input from fluxes to luptitudes
+#
+# o NORMALIZATION_SCHEME: pre-processing of the inputs prior to training
+#   and prediction. This stage comes after TRANSFORM_INPUTS.
+#    - natural: use data, as is
+#    - whiten: subtract mean, and divide by standard deviation of data
+#
+# o VALID_SAMPLE_METHOD: method to use for splitting the training set
+#   into a training and validation sets.
+#    - random: purely random sampling, best to make sure the training
+#      and validation data are representative of eachother
+#    - sequential: take the first N elements for training, and the
+#      remaining M elements for validation. Can generate scenarios
+#      where the training and validation sample the input/output space
+#      differently.
+#
+# o TRAIN_VALID_RATIO: fraction of training data to use for actual
+#   training, the rest is used for validation. If set to 1, no
+#   validation is performed and the code will just search for the
+#   maximum likelihood estimate on the training data. Otherwise, the
+#   validation set will be used to stop optimizing the model at the
+#   right time, before doing over-fitting.
+#
+# o VALID_SAMPLE_SEED: random seed to use when doing the random sampling
+#   to create the validation set. Change this seed to generate a
+#   different train/valid split, to see if your results are robust.
+#
+#-----------------------------------------------------------------------
+
+TRAINING_CATALOG              = sdss_train.cat
+PREDICTION_CATALOG            = sdss_pred.cat
+BANDS                         = ^mag_[ugriz]$
+FLUX_COLUMN_PREFIX            = mag_
+ERROR_COLUMN_PREFIX           = magerr_
+OUTPUT_COLUMN                 = z_spec
+WEIGHT_COLUMN                 =
+WEIGHTING_SCHEME              = uniform          # uniform / 1/(1+z) / balanced
+BALANCED_WEIGHTING_BIN        = 0.1
+BALANCED_WEIGHTING_MAX_WEIGHT = 10
+OUTPUT_MIN                    = 0
+OUTPUT_MAX                    = 7
+USE_ERRORS                    = 1                # 0 / 1
+TRANSFORM_INPUTS              = no               # no, flux_to_luptitude, ...
+NORMALIZATION_SCHEME          = whiten           # natural / whiten
+VALID_SAMPLE_METHOD           = random           # random / sequential
+TRAIN_VALID_RATIO             = 0.5              # >= 0 and <= 1
+VALID_SAMPLE_SEED             = 42
+
+
+#--- OUTPUT INFORMATION  -----------------------------------------------
+#
+# o OUTPUT_CATALOG: path to the file that will contain the predictions.
+#   This catalog will contain the columns:
+#     - id: source ID (only if also given in prediction catalog)
+#     - value: predicted value
+#     - uncertainty: predicted uncertainty, sqrt(variance)
+#     - var.density: variance from density of training set
+#     - var.tr.noise: variance from noise in training set
+#     - var.in.noise: variance from noise in fluxes used in prediction
+#
+# o MODEL_FILE: path to the file where the trained model will be saved.
+#   This model can be reused later for doing further predictions, but
+#   only if the data uses the same set of bands. It can also be used as
+#   a hint (or starting point) for further training, see below.
+#
+# o SAVE_MODEL: if enabled, the trained model will be saved in
+#   MODEL_FILE at the end of the training.
+#
+# o REUSE_MODEL: if enabled, and if the file MODEL_FILE exists, GPz++
+#   will reuse this pre-trained model to do predictions.
+#
+# o USE_MODEL_AS_HINT: if enabled, and if the file MODEL_FILE exists,
+#   GPz++ will load the model parameters and will use them as starting
+#   point for a new training. This can be useful for example when
+#   training a model with a very large number of free parameters (for
+#   exampled with covariances set to GPVC), which tends to get stuck in
+#   local minima. In these cases, you can do a first training with a
+#   less complex covariance, and use that as starting point for the more
+#   complex model.
+#
+# o PREDICT_ERROR: if enabled, the program will make predictions for the
+#   uncertainty on the predicted values. This is the most time-consuming
+#   part of the prediction stage, so if you are not interested in
+#   uncertainties you can set this to zero.
+#
+#-----------------------------------------------------------------------
+
+OUTPUT_CATALOG    = gpz.cat
+MODEL_FILE        = gpz_model.dat
+SAVE_MODEL        = 1                  # 0 / 1
+REUSE_MODEL       = 1                  # 0 / 1
+USE_MODEL_AS_HINT = 0                  # 0 / 1
+PREDICT_ERROR     = 1                  # 0 / 1
+
+
+#--- MODEL PARAMETERS  -------------------------------------------------
+#
+# o NUM_BF: number of basis functions.
+#
+# o COVARIANCE: basis function covariance matrix form
+#    - gpgl: global length (simplest)
+#    - gpvl: variable length
+#    - gpgd: global diagonal
+#    - gpvd: variable diagonal (recommended)
+#    - gpgc: global covariance
+#    - gpvc: variable covariance (most complex)
+#  A more complex covariance will be able to provide a better fit to the
+#  training data, however it is also easier to get stuck in local
+#  minima, and the computing time will be significantly increased.
+#
+# o PRIOR_MEAN: prior on mean value of output (used outside of coverage
+#   of the training set).
+#    - zero: assume zero
+#    - constant: assume the mean observed in the training set
+#
+# o OUTPUT_ERROR_TYPE: functional form of the predicted uncertainty
+#    - uniform: a constant value
+#    - input_dependent: linear combination of the basis functions
+#
+# o BF_POSITION_SEED: random seed to use when initializing the positions
+#   of the basis functions.
+#
+# o FUZZING: if enabled, the initial values of each model parameter will
+#   be perturbed by a small random number (or order 10-20%). This can be
+#   used to check if the model got stuck in a local minimum.
+#
+# o FUZZING_SEED: random seed to use when generating the random numbers
+#   for fuzzing.
+#
+# o MAX_ITER: maximum number of iterations of the optimization procedure
+#   allowed before the optimization is stopped and the model chosen as
+#   a best-fit (be cautious if this happens, as it may mean the model is
+#   not optimal, or there is a problem with convergence).
+#
+# o TOLERANCE: tolerance threshold on the likelihood below which two
+#   models are considered equally good. Lower this value to let the
+#   optimization procedure find a better fit, at the expense of a larger
+#   number of iterations.
+#
+# o GRAD_TOLERANCE: tolerance threshold on the parameter gradients
+#   below which the parameters are considered as converged.
+#
+#-----------------------------------------------------------------------
+
+NUM_BF            = 100
+COVARIANCE        = gpvd              # gpgl / gpvl / gpgd / gpvd / gpgc / gpvc
+PRIOR_MEAN        = constant          # zero / constant
+OUTPUT_ERROR_TYPE = input_dependent   # uniform / input_dependent
+BF_POSITION_SEED  = 55
+FUZZING           = 0                 # 0 / 1
+FUZZING_SEED      = 97
+MAX_ITER          = 500
+TOLERANCE         = 1e-9
+GRAD_TOLERANCE    = 1e-5
