@@ -6,6 +6,7 @@
 
 - [Description](#description)
 - [Install instructions](#install-instructions)
+- [Usage instructions](#usage-instructions)
 - [Acknowledgments](#acknowledgments)
 
 <!-- /MarkdownTOC -->
@@ -13,13 +14,13 @@
 
 # Description
 
-This is a C++ version of the machine-learning photometric redshift code [GPZ](https://github.com/OxfordML/GPz) (Almosallam et al. 2061a,2016b,in prep.). Below is a list of the main selling points:
+This is a C++ version of the machine-learning photometric redshift code [GPZ](https://github.com/OxfordML/GPz) (Almosallam et al. 2016a,2016b,2017). Below is a list of the main selling points:
 
  - GPz++ is free software and does not require a MatLab license.
  - GPz++ runs up to 20 times faster than the MatLab version.
  - GPz++ implements GPz v2.0, with support for noisy and missing data.
 
-If you use this code for your own work, please cite this repository, as well as Almosallam et al. (2016a,2016b,in prep.) where GPz was first introduced.
+If you use this code for your own work, please cite this repository, as well as Almosallam et al. (2016a,2016b) where GPz was first introduced, and [Almosallam (2017)](http://www.robots.ox.ac.uk/~parg/pubs/theses/ibrahim_almosallam_thesis.pdf) where all the features of GPz v2.0 are described.
 
 
 # Install instructions
@@ -38,6 +39,16 @@ make install
 ```
 
 This will create an executable called ```gpz++``` in the ```gpzpp/bin``` directory, which you can use immediately.
+
+
+# Usage instructions
+
+To run GPz++, all you need is to specify the path to a parameter file containing all the required information (paths to catalogs, options of the GPz model, ...):
+```
+gpz++ gpz.param
+```
+
+See the ```gpz.param``` file in the ```example``` directory for a full description of the content of this file.
 
 
 # Acknowledgments
